@@ -55,46 +55,44 @@ metadata {
 	}
 
 	tiles(scale: 2) {
-		multiAttributeTile(name:"motion", type: "generic", width: 6, height: 4){
-			tileAttribute ("device.motion", key: "PRIMARY_CONTROL") {
-				attributeState "active", label:'motion', icon:"st.motion.motion.active", backgroundColor:"#00a0dc"
-				attributeState "inactive", label:'no motion', icon:"st.motion.motion.inactive", backgroundColor:"#ffffff"
-			}
-            tileAttribute("device.lastCheckin", key: "SECONDARY_CONTROL") {
-    			attributeState("default", label:'Last Update: ${currentValue}',icon: "st.Health & Wellness.health9")
-            }
-		}
-		valueTile("Light", "device.Light", decoration: "flat", inactiveLabel: false, width: 2, height: 2){
-			state "Light", label:'${currentValue}% \nLight', unit: ""
-		}
-		valueTile("battery", "device.battery", decoration: "flat", inactiveLabel: false, width: 2, height: 2) {
-			state "battery", label:'${currentValue}% battery', unit:""
-		}
-              
-	    standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-            state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
-        }
-        standardTile("configure", "device.configure", inactiveLabel: false, width: 2, height: 2, decoration: "flat") {
-			state "configure", label:'', action:"configuration.configure", icon:"st.secondary.configure"
-	    }       
-        
-		standardTile("reset", "device.reset", inactiveLabel: false, decoration: "flat", width: 2, height: 1) {
-			state "default", action:"reset", label: "Reset Motion"
-		}
-		standardTile("icon", "device.refresh", inactiveLabel: false, decoration: "flat", width: 4, height: 1) {
-            state "default", label:'Last Motion:', icon:"st.Entertainment.entertainment15"
-        }
-        valueTile("lastmotion", "device.lastMotion", decoration: "flat", inactiveLabel: false, width: 4, height: 1) {
-			state "default", label:'${currentValue}'
-        }
-        standardTile("refresh", "command.refresh", inactiveLabel: false) {
-			state "default", label:'refresh', action:"refresh.refresh", icon:"st.secondary.refresh-icon"
-	   }
+           multiAttributeTile(name:"motion", type: "generic", width: 6, height: 4) {
+              tileAttribute ("device.motion", key: "PRIMARY_CONTROL") {
+                 attributeState "active", label:'motion', icon:"st.motion.motion.active", backgroundColor:"#00a0dc"
+                 attributeState "inactive", label:'no motion', icon:"st.motion.motion.inactive", backgroundColor:"#ffffff"
+              }
+              tileAttribute("device.lastMotion", key: "SECONDARY_CONTROL") {
+                 attributeState("default", label:'Last Motion: ${currentValue}')
+              }
+           }
 
-		main(["motion"])
-		details(["motion", "Light", "battery", "icon", "lastmotion", "reset", "refresh"])
-	}
-}
+           valueTile("battery", "device.battery", decoration: "flat", inactiveLabel: false, width: 2, height: 2) {
+              state "default", label:'${currentValue}%', unit:"",
+              backgroundColors: [
+                 [value: 10, color: "#bc2323"],
+                 [value: 26, color: "#f1d801"],
+                 [value: 51, color: "#44b621"]
+              ]
+           }
+           valueTile("light", "device.Light", decoration: "flat", inactiveLabel: false, width: 2, height: 2) {
+              state "light", label:'${currentValue}% \nLight', unit: ""
+           }
+           standardTile("reset", "device.reset", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+              state "default", action:"reset", label: "Reset Motion", icon:"st.motion.motion.active"
+           }
+           valueTile("lastcheckin", "device.lastCheckin", decoration: "flat", inactiveLabel: false, width: 5, height: 1) {
+              state "default", label:'Last Update: ${currentValue}'
+           }
+           standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+              state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
+           }
+           standardTile("refresh", "command.refresh", inactiveLabel: false) {
+              state "default", label:'refresh', action:"refresh.refresh", icon:"st.secondary.refresh-icon"
+           }
+
+           main(["motion"])
+           details(["motion", "battery", "light", "reset", "lastcheckin", "refresh"])
+           }
+        }
 
 def parse(String description) {
 	def linkText = getLinkText(device)
