@@ -105,7 +105,7 @@ def parse(String description) {
     def now = new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
     def nowDate = new Date(now).getTime()
     sendEvent(name: "lastCheckin", value: now)
-    sendEvent(name: "lastCheckinDate", value: nowDate)
+    sendEvent(name: "lastCheckinDate", value: nowDate, displayed: false)
 
     Map map = [:]
 
