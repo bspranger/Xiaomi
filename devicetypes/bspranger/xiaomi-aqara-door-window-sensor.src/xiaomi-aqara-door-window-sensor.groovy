@@ -113,7 +113,7 @@ def parse(String description) {
         log.debug "${device.displayName} Event: ${result}"
         map = getContactResult(result);
         sendEvent(name: "lastOpened", value: now)
-        sendEvent(name: "lastOpenedDate", value: nowDate)
+        sendEvent(name: "lastOpenedDate", value: nowDate, displayed: false)
     } else if (description?.startsWith('catchall:')) {
         map = parseCatchAllMessage(description)
     } else if (description?.startsWith('read attr - raw:')) {
