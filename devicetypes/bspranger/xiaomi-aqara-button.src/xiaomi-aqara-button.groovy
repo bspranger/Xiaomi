@@ -128,7 +128,7 @@ def parse(String description) {
     {
         map = parseCustomMessage(description) 
         sendEvent(name: "lastpressed", value: now)
-        sendEvent(name: "lastpressedDate", value: nowDate) 
+        sendEvent(name: "lastpressedDate", value: nowDate, displayed: false) 
     }
     else if (description?.startsWith('catchall:')) 
     {
