@@ -113,8 +113,8 @@ def parse(String description) {
     if (description?.startsWith('zone status')) {
         map = parseZoneStatusMessage(description)
         if (map.value == "closed") {
-            sendEvent(name: "lastOpened", value: now)
-            sendEvent(name: "lastOpenedDate", value: nowDate) 
+            sendEvent(name: "lastOpened", value: now, displayed: false)
+            sendEvent(name: "lastOpenedDate", value: nowDate, displayed: false) 
         }
     } else if (description?.startsWith('catchall:')) {
         map = parseCatchAllMessage(description)
