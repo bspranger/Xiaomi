@@ -114,7 +114,7 @@ def push() {
 	log.debug "Virtual App Button Pressed"
 	sendEvent(name: "lastpressed", value: now, displayed: false)
         sendEvent(name: "lastpressedDate", value: nowDate, displayed: false) 
-	sendEvent(name: "button", value: "pushed", data: [buttonNumber: 1], descriptionText: "$device.displayName app button was pushed", isStateChange: true)
+	sendEvent(name: "button", value: "push", data: [buttonNumber: 1], descriptionText: "$device.displayName app button was pushed", isStateChange: true)
 }
 
 def parse(String description) {
@@ -247,7 +247,7 @@ private Map parseCustomMessage(String description) {
     {
         if (PressType == "Toggle")
         {
-            if ((state.button != "pushed") && (state.button != "released")) 
+            if ((state.button != "push") && (state.button != "released")) 
             {
                 state.button = "released"
             }
@@ -255,8 +255,8 @@ private Map parseCustomMessage(String description) {
             {
                 if (state.button == "released") 
                 {
-                   result = getContactResult("pushed")
-                   state.button = "pushed"
+                   result = getContactResult("push")
+                   state.button = "push"
                 }
                 else 
                 {
@@ -269,7 +269,7 @@ private Map parseCustomMessage(String description) {
         {
             if (description == 'on/off: 0')
             {
-                result = getContactResult("pushed")
+                result = getContactResult("push")
             } 
             else if (description == 'on/off: 1')
             {
@@ -281,7 +281,7 @@ private Map parseCustomMessage(String description) {
 }
 
 private Map getContactResult(value) {
-    def descriptionText = "${device.displayName} was ${value == 'pushed' ? 'pushed' : 'released'}"
+    def descriptionText = "${device.displayName} was ${value == 'push' ? 'pushed' : 'released'}"
     return [
         name: 'button',
         value: value,
