@@ -55,7 +55,8 @@ metadata {
         capability "Button"
         capability "Configuration"
         capability "Sensor"
-	capability "Momentary"    
+	capability "Momentary"
+	capability "Health Check"
         
         attribute "lastpressed", "string"
 	attribute "lastpressedDate", "string"
