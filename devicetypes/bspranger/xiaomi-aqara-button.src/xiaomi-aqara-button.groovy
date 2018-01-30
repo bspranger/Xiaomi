@@ -63,7 +63,7 @@ metadata {
         capability "Health Check"
 
         attribute "lastCheckin", "string"
-        attribute "lastPress", "string"
+        attribute "lastpressed", "string"
         attribute "lastpressedDate", "Date"
         attribute "lastCheckinDate", "Date"
         attribute "batteryRuntime", "String"
@@ -81,7 +81,7 @@ metadata {
     tiles(scale: 2) {
         multiAttributeTile(name:"button", type:"lighting", width: 6, height: 4, canChangeIcon: true) {
             tileAttribute("device.button", key: "PRIMARY_CONTROL") {
-                attributeState "pushed", label:'${name}', action: "momentary.push", backgroundColor:"#00a0dc"
+                attributeState "push", label:'${name}', action: "momentary.push", backgroundColor:"#00a0dc"
                 attributeState "released", label:'${name}', action: "momentary.push", backgroundColor:"#ffffff"
             }
             tileAttribute("device.lastpressed", key: "SECONDARY_CONTROL") {
@@ -114,10 +114,9 @@ metadata {
 //adds functionality to press the centre tile as a virtualApp Button
 def push() {
 	log.debug "Virtual App Button Pressed"
-	sendEvent(name: "button", value: "on", isStateChange: true, displayed: false)
-	sendEvent(name: "button", value: "off", isStateChange: true, displayed: false)
-	sendEvent(name: "momentary", value: "pushed", isStateChange: true)
-	sendEvent(name: "button", value: "pushed", data: [buttonNumber: 1], descriptionText: "$device.displayName app button was pushed", isStateChange: true)
+        sendEvent(name: "lastpressed", value: now, displayed: false)
+        sendEvent(name: "lastpressedDate", value: nowDate, displayed: false)
+	sendEvent(name: "button", value: "push", data: [buttonNumber: 1], descriptionText: "$device.displayName app button was pushed", isStateChange: true)
 }
 
 def parse(String description) {
@@ -252,14 +251,14 @@ private Map parseCustomMessage(String description) {
     {
         if (PressType == "Toggle")
         {
-            if ((state.button != "pushed") && (state.button != "released"))
+            if ((state.button != "push") && (state.button != "released"))
             {
                 state.button = "released"
             }
             if (state.button == "released")
             {
-                result = getContactResult("pushed")
-                state.button = "pushed"
+                result = getContactResult("push")
+                state.button = "push"
             }
             else
             {
@@ -269,8 +268,8 @@ private Map parseCustomMessage(String description) {
         }
         else
         {
-            result = getContactResult("pushed")
-            state.button = "pushed"
+            result = getContactResult("push")
+            state.button = "push"
             runIn(ReleaseTime, ReleaseButton)
         }
     }
@@ -288,7 +287,7 @@ def ReleaseButton()
 }
 
 private Map getContactResult(value) {
-    def descriptionText = "${device.displayName} was ${value == 'pushed' ? 'pushed' : 'released'}"
+    def descriptionText = "${device.displayName} was ${value == 'push' ? 'push' : 'released'}"
     return [
         name: 'button',
         value: value,
