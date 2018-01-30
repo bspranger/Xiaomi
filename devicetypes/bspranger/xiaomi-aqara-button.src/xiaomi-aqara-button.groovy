@@ -63,7 +63,7 @@ metadata {
         capability "Health Check"
 
         attribute "lastCheckin", "string"
-        attribute "lastPress", "string"
+        attribute "lastpressed", "string"
         attribute "lastpressedDate", "Date"
         attribute "lastCheckinDate", "Date"
         attribute "batteryRuntime", "String"
@@ -114,9 +114,8 @@ metadata {
 //adds functionality to press the centre tile as a virtualApp Button
 def push() {
 	log.debug "Virtual App Button Pressed"
-	sendEvent(name: "button", value: "on", isStateChange: true, displayed: false)
-	sendEvent(name: "button", value: "off", isStateChange: true, displayed: false)
-	sendEvent(name: "momentary", value: "pushed", isStateChange: true)
+        sendEvent(name: "lastpressed", value: now, displayed: false)
+        sendEvent(name: "lastpressedDate", value: nowDate, displayed: false)
 	sendEvent(name: "button", value: "pushed", data: [buttonNumber: 1], descriptionText: "$device.displayName app button was pushed", isStateChange: true)
 }
 
