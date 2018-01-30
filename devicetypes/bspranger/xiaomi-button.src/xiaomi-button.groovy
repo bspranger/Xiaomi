@@ -55,8 +55,10 @@ metadata {
         capability "Button"
         capability "Configuration"
         capability "Sensor"
+	capability "Momentary"    
         
-        attribute "lastPress", "string"
+        attribute "lastpressed", "string"
+	attribute "lastpressedDate", "string"
         attribute "batterylevel", "string"
         attribute "lastCheckin", "string"
         attribute "lastCheckinDate", "Date"
@@ -109,9 +111,8 @@ metadata {
 //adds functionality to press the centre tile as a virtualApp Button
 def push() {
 	log.debug "Virtual App Button Pressed"
-	sendEvent(name: "button", value: "on", isStateChange: true, displayed: false)
-	sendEvent(name: "button", value: "off", isStateChange: true, displayed: false)
-	sendEvent(name: "momentary", value: "pushed", isStateChange: true)
+	sendEvent(name: "lastpressed", value: now, displayed: false)
+        sendEvent(name: "lastpressedDate", value: nowDate, displayed: false) 
 	sendEvent(name: "button", value: "pushed", data: [buttonNumber: 1], descriptionText: "$device.displayName app button was pushed", isStateChange: true)
 }
 
