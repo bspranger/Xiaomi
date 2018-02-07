@@ -99,7 +99,7 @@ metadata {
    preferences {
 	section {	
 		input name:"ReleaseTime", type:"number", title:"Minimum time in seconds for a press to clear", defaultValue: 2
-        	input name:"PressType", type:"enum", options:["Toggle", "Momentary"], description:"Effects how the button toggles", defaultValue:"Toggle"
+        	input name: "PressType", type: "enum", options: ["Momentary", "Toggle"], title: "Momentary or toggle? ", defaultValue: "Momentary"
 		}
 	section {
 		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
