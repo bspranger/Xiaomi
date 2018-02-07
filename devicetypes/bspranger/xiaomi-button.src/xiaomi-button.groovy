@@ -96,9 +96,8 @@ metadata {
         details(["button","battery","lastcheckin","batteryRuntime"])
    }
    preferences {
-	section {	
-		input name: "holdTime", "number", title: "Minimum time in seconds for a press to count as \"held\"", defaultValue: 4
-        	input name: "PressType", type: "enum", options: ["Toggle", "Momentary"], description: "Effects how the button toggles", defaultValue: "Toggle"
+	section {
+        	input name: "PressType", type: "enum", options: ["Momentary", "Toggle"], title: "Momentary or toggle? ", defaultValue: "Momentary"
 		}
 	section {
 		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
