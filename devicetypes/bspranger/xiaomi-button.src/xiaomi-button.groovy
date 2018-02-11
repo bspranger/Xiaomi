@@ -1,5 +1,7 @@
 /**
  *  Xiaomi Zigbee Button
+ *  Version 1.0
+ *
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -9,20 +11,14 @@
  *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
+ *
+ *  Original device handler code by a4refillpad, adapted for use with Aqara model by bspranger
+ *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh 
  * 
-  * Based on original DH by Eric Maycock 2015 and Rave from Lazcad
- *  change log:
- *  25.01.2018 added virtualApp button on tile
- *  added 100% battery max
- *  fixed battery parsing problem
- *  added lastcheckin attribute and tile
- *  added a means to also push button in as tile on smartthings app
- *  fixed ios tile label problem and battery bug 
- *  sulee: change battery calculation
- *  sulee: changed to work as a push button
- *  sulee: added endpoint for Smartthings to detect properly
- *  sulee: cleaned everything up
- *  bspranger: renamed to bspranger to remove confusion of a4refillpad
+ *  Known issues:
+ *  Xiaomi sensors do not seem to respond to refresh requests
+ *  Inconsistent rendering of user interface text/graphics between iOS and Android devices - This is due to SmartThings, not this device handler
+ *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See 
  *
  *  Fingerprint Endpoint data:
  *  zbjoin: {"dni":"xxxx","d":"xxxxxxxxxxx","capabilities":"80","endpoints":[{"simple":"01 0104 5F01 01 03 0000 FFFF 0006 03 0000 0004 FFFF","application":"03","manufacturer":"LUMI","model":"lumi.sensor_switch.aq2"}],"parent":"0000","joinType":1}
@@ -40,18 +36,7 @@
  *        deviceJoinName: whatever you want it to show in the app as a Thing
  *
  */
-preferences {
-	input ("holdTime", "number", title: "Minimum time in seconds for a press to count as \"held\"", defaultValue: 4, displayDuringSetup: false)
-        input name: "PressType", type: "enum", options: ["Toggle", "Momentary"], description: "Effects how the button toggles", defaultValue: "Toggle", displayDuringSetup: true
-    	input name: "dateformat", type: "enum", title: "Set Date Format\n US (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", required: false, options:["US","UK","Other"]
-	input name: "clockformat", type: "bool", title: "Use 24 hour clock?", defaultValue: false, required: false
-	input description: "Only change the settings below if you know what you're doing", displayDuringSetup: false, type: "paragraph", element: "paragraph", title: "ADVANCED SETTINGS"
-	input name: "voltsmax", title: "Max Volts\nA battery is at 100% at __ volts\nRange 2.8 to 3.4", type: "decimal", range: "2.8..3.4", defaultValue: 3, required: false
-	input name: "voltsmin", title: "Min Volts\nA battery is at 0% (needs replacing) at __ volts\nRange 2.0 to 2.7", type: "decimal", range: "2..2.7", defaultValue: 2.5, required: false
-	input description: "Changed your battery? Reset the date", displayDuringSetup: false, type: "paragraph", element: "paragraph", title: "Battery Changed"
-	input name: "battReset", type: "bool", title: "Battery Changed?", description: "", displayDuringSetup: false
-} 
- 
+
 metadata {
     definition (name: "Xiaomi Button", namespace: "bspranger", author: "bspranger") {
         capability "Battery"
@@ -61,11 +46,11 @@ metadata {
 	capability "Health Check"
         capability "Momentary"
         
+        attribute "lastCheckin", "string"
+        attribute "lastCheckinDate", "Date"
         attribute "lastpressed", "string"
         attribute "lastpressedDate", "string"
         attribute "batterylevel", "string"
-        attribute "lastCheckin", "string"
-        attribute "lastCheckinDate", "Date"
         attribute "batteryRuntime", "String"
 
         fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sensor_switch", deviceJoinName: "Original Xiaomi Button"
@@ -98,7 +83,7 @@ metadata {
 			]
         }
         valueTile("lastcheckin", "device.lastCheckin", decoration: "flat", inactiveLabel: false, width: 4, height: 1) {
-            state "default", label:'Last Checkin:\n${currentValue}'
+            state "default", label:'Last Event:\n${currentValue}'
         }
 	valueTile("batteryRuntime", "device.batteryRuntime", inactiveLabel: false, decoration: "flat", width: 4, height: 1) {
 	    state "batteryRuntime", label:'Battery Changed: ${currentValue}'
@@ -106,6 +91,21 @@ metadata {
         main (["button"])
         details(["button","battery","lastcheckin","batteryRuntime"])
    }
+   preferences {
+		//Button Config
+        	input name: "PressType", type: "enum", options: ["Momentary", "Toggle"], title: "Momentary or toggle? ", defaultValue: "Momentary"
+		//Date & Time Config
+		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
+		input name: "dateformat", type: "enum", title: "Set Date Format\n US (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", options:["US","UK","Other"]
+		input name: "clockformat", type: "bool", title: "Use 24 hour clock?"
+		//Battery Reset Config
+            	input description: "If you have installed a new battery, the toggle below will reset the Changed Battery date to help remember when it was changed.", type: "paragraph", element: "paragraph", title: "CHANGED BATTERY DATE RESET"
+		input name: "battReset", type: "bool", title: "Battery Changed?"
+		//Battery Voltage Offset
+            	input description: "Only change the settings below if you know what you're doing.", type: "paragraph", element: "paragraph", title: "ADVANCED SETTINGS"
+		input name: "voltsmax", title: "Max Volts\nA battery is at 100% at __ volts\nRange 2.8 to 3.4", type: "decimal", range: "2.8..3.4", defaultValue: 3, required: false
+		input name: "voltsmin", title: "Min Volts\nA battery is at 0% (needs replacing) at __ volts\nRange 2.0 to 2.7", type: "decimal", range: "2..2.7", defaultValue: 2.5, required: false
+    }
 }
 
 //adds functionality to press the centre tile as a virtualApp Button
@@ -119,17 +119,21 @@ def push() {
 	sendEvent(name: "button", value: "released", data: [buttonNumber: 1], descriptionText: "$device.displayName app button was released", isStateChange: true)
 }
 
+// Parse incoming device messages to generate events
 def parse(String description) {
     log.debug "${device.displayName}: Parsing '${description}'"
 
-    //  send event for heartbeat    
+	// Determine current time and date in the user-selected date format and clock style 
     def now = formatDate()	
     def nowDate = new Date(now).getTime()
-    sendEvent(name: "lastCheckin", value: now)
+	// Any report - button press & Battery - results in a lastCheckin event and update to Last Checkin tile
+	// However, only a non-parseable report results in lastCheckin being displayed in events log
+    sendEvent(name: "lastCheckin", value: now, displayed: false)
     sendEvent(name: "lastCheckinDate", value: nowDate, displayed: false) 
 
     Map map = [:]
 
+	// Send message data to appropriate parsing function based on the type of report
     if (description?.startsWith('on/off: ')) 
     {
         map = parseCustomMessage(description) 
@@ -185,6 +189,7 @@ private Map parseReadAttrMessage(String description) {
     return [:]    
 }
 
+// Check catchall for battery voltage data to pass to getBatteryResult for conversion to percentage report
 private Map parseCatchAllMessage(String description) {
     def i
     Map resultMap = [:]
@@ -213,8 +218,11 @@ private Map parseCatchAllMessage(String description) {
     return resultMap
 }
 
+// Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
 private Map getBatteryResult(rawValue) {
-    def rawVolts = rawValue / 1000
+    // raw voltage is normally supplied as a 4 digit integer that needs to be divided by 1000
+    // but in the case the final zero is dropped then divide by 100 to get actual voltage value 
+    def rawVolts = (rawValue < 1000) ? (rawValue / 100) : (rawValue / 1000)
     def minVolts
     def maxVolts
 
@@ -305,12 +313,15 @@ def configure() {
     checkIntervalEvent("configure");
 }
 
+// installed() runs just after a sensor is paired using the "Add a Thing" method in the SmartThings mobile app
 def installed() {
     state.battery = 0
+    resetBatteryRuntime()
     state.button = "released"
     checkIntervalEvent("installed");
 }
 
+// updated() will run twice every time user presses save in preference settings page
 def updated() {
     checkIntervalEvent("updated");
 	if(battReset){
@@ -329,6 +340,7 @@ def formatDate(batteryReset) {
     def correctedTimezone = ""
     def timeString = clockformat ? "HH:mm:ss" : "h:mm:ss aa"
 
+	// If user's hub timezone is not set, display error messages in log and events log, and set timezone to GMT to avoid errors
     if (!(location.timeZone)) {
         correctedTimezone = TimeZone.getTimeZone("GMT")
         log.error "${device.displayName}: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app."
