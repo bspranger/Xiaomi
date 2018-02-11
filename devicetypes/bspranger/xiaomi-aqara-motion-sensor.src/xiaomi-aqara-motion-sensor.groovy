@@ -69,7 +69,7 @@ metadata {
             state "default", label:''
         }
         valueTile("illuminance", "device.illuminance", decoration:"flat", inactiveLabel: false, width: 2, height: 2) {
-            state "default", label:'${currentValue}\nlux', unit:"lux",
+            state "default", label:'${currentValue}\nlux', unit:"lux"
         }
         standardTile("reset", "device.reset", inactiveLabel: false, decoration:"flat", width: 2, height: 2) {
             state "default", action:"stopMotion", label:'Reset Motion', icon:"st.motion.motion.active"
