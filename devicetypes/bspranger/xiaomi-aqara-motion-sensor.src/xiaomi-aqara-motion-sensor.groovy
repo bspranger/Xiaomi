@@ -86,7 +86,7 @@ metadata {
 
 	preferences {
 		//Reset to No Motion Config
-		input description: "This setting only changes how long MOTION DETECTED is reported in SmartThings. The sensor hardware always remains blind to motion for 60 seconds after any activity.", type: "paragraph", element: "paragraph", title: "MOTION RESET"
+		input description: "This setting only changes how long MOTION DETECTED is reported in SmartThings. The sensor hardware in NORMAL mode remains blind to new motion for 60 seconds after any activity. \n\n(NOTE: Pairing or pushing button on sensor puts it into TEST mode which recognizes new motion every 5 seconds. After 2 hours it reverts to NORMAL/60 second mode.)", type: "paragraph", element: "paragraph", title: "MOTION RESET"
 		input "motionreset", "number", title: "", description: "Enter number of seconds (default = 60)", range: "1..7200"
 		//Date & Time Config
 		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
