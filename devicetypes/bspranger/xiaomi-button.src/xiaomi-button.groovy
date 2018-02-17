@@ -272,11 +272,26 @@ private Map parseCustomMessage(String description) {
         {
             if (description == 'on/off: 0')
             {
-                result = getContactResult("pushed")
+                //result = getContactResult("pushed")
+		def now = formatDate()
+		def pushedTime = new Date(now).getTime()
+		    log.debug "pushed ${pushedTime}"
+
             } 
             else if (description == 'on/off: 1')
             {
-                result = getContactResult("released")
+		def now = formatDate()
+		def releasedTime = new Date(now).getTime()
+         log.debug "released ${releasedTime}"
+		def heldTime = releasedTime - pushedTime
+		    log.debug "pushed ${pushedTime} released ${releasedTime} held ${heldTime}"
+		    if(heldTime >= 4000){
+		    log.debug "Device was held"
+		    }
+		    else{
+		    log.debug "Device was pushed"    
+		    }
+            }
             }
         }
         return result
