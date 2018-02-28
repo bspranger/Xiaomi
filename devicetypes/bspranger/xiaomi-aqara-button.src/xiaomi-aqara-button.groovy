@@ -1,6 +1,6 @@
 /**
  *  Xiaomi Aqara Zigbee Button
- *  Version 1.1
+ *  Version 1.2
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -56,6 +56,7 @@ metadata {
         command "resetBatteryRuntime"
 
         fingerprint endpointId: "01", profileId: "0104", deviceId: "5F01", inClusters: "0000,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "LUMI", model: "lumi.sensor_switch.aq2", deviceJoinName: "Xiaomi Aqara Button"
+        fingerprint endpointId: "01", profileId: "0104", inClusters: "0000,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "LUMI", model: "lumi.sensor_switch.aq3", deviceJoinName: "Xiaomi Aqara Button"
     }
 
     simulator {
