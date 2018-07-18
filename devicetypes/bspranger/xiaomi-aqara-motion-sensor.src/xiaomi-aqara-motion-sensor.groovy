@@ -1,6 +1,6 @@
 /**
  *  Xiaomi Aqara Motion Sensor
- *  Version 1.1
+ *  Version 1.2
  *
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -34,7 +34,6 @@ metadata {
         attribute "lastCheckin", "String"
         attribute "lastCheckinDate", "String"
         attribute "lastMotion", "String"
-        attribute "light", "number"
         attribute "batteryRuntime", "String"
 
         fingerprint endpointId: "01", profileId: "0104", deviceId: "0107", inClusters: "0000,FFFF,0406,0400,0500,0001,0003", outClusters: "0000,0019", manufacturer: "LUMI", model: "lumi.sensor_motion.aq2", deviceJoinName: "Xiaomi Aqara Motion Sensor"
@@ -54,7 +53,7 @@ metadata {
                 attributeState "inactive", label:'No Motion', icon:"st.motion.motion.inactive", backgroundColor:"#ffffff"
             }
             tileAttribute("device.lastMotion", key: "SECONDARY_CONTROL") {
-                attributeState("default", label:'Last Motion: ${currentValue}')
+                attributeState("default", label:'${currentValue}')
             }
         }
         valueTile("battery", "device.battery", decoration:"flat", inactiveLabel: false, width: 2, height: 2) {
@@ -75,10 +74,10 @@ metadata {
             	[value:1, color:"#07212c"],
             	[value:25, color:"#0f4357"],
             	[value:50, color:"#12536d"],
-		[value:100, color:"#1a7599"],
-		[value:150, color:"#2196c4"],
+            	[value:100, color:"#1a7599"],
+            	[value:150, color:"#2196c4"],
             	[value:250, color:"#3bb0de"],
-		[value:500, color:"#51b8e1"],
+            	[value:500, color:"#51b8e1"],
             	[value:750, color:"#66c1e5"],
             	[value:1000, color:"#7ccae9"],
             	[value:1500, color: "#92d3ed"] 
@@ -98,9 +97,12 @@ metadata {
 	}
 
 	preferences {
-		//Reset to No Motion Config
-		input description: "This setting only changes how long MOTION DETECTED is reported in SmartThings. The sensor hardware always remains blind to motion for 60 seconds after any activity.", type: "paragraph", element: "paragraph", title: "MOTION RESET"
-		input "motionreset", "number", title: "", description: "Enter number of seconds (default = 60)", range: "1..7200"
+		//Test Mode & Motion Reset Config
+		input description: "", type: "paragraph", element: "paragraph", title: "MOTION RESET & TESTING MODE"
+		input description: "This setting only changes how long MOTION DETECTED is reported in SmartThings. After the number of seconds entered here, if no new activity is detected then NO MOTION is reported. If this setting is left blank, a default of 61 seconds is used to match the behavior of the sensor's hardware in Normal Mode (for more information, please refer to the text under the next setting.)", type: "paragraph", element: "paragraph", title: "MOTION RESET"
+		input "motionreset", "number", title: "", description: "Number of seconds (default = 61)", range: "1..7200"
+		input description: "After it is paired or the reset button is short-pressed, the sensor hardware goes into Test Mode. During the hardware Test Mode the sensor will report any detected motion every 6 seconds, to help with choosing a suitable installation location. After 1-2 hours of inactivity the sensor will go into Normal Mode which means the hardware remains 'blind' to all activity for 60 seconds after motion is detected.\n\nTurning on this Testing Mode setting will override the Motion Reset time setting to match the behavior of the sensor during its hardware Test Mode. After turning on Testing Mode using the toggle below, it will remain active for 60 minutes, but can be manually turned off by using the toggle a second time. During Testing Mode a reminder message is displayed in the main tile.", type: "paragraph", element: "paragraph", title: "TESTING MODE"
+		input name: "testMode", type: "bool", title: "Toggle Testing Mode?"
 		//Date & Time Config
 		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
 		input name: "dateformat", type: "enum", title: "Set Date Format\n US (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", options:["US","UK","Other"]
@@ -165,21 +167,28 @@ private Map parseReportAttributeMessage(String description) {
     def cluster = description.split(",").find {it.split(":")[0].trim() == "cluster"}?.split(":")[1].trim()
     def attrId = description.split(",").find {it.split(":")[0].trim() == "attrId"}?.split(":")[1].trim()
     def value = description.split(",").find {it.split(":")[0].trim() == "value"}?.split(":")[1].trim()
+	Map resultMap = [:]
 
-    Map resultMap = [:]
-    def now = formatDate()
-
-	// The sensor only sends a motion detected message so the reset to no motion is performed in code
-    if (cluster == "0406" & value == "01") {
+	// Because the sensor only sends motion detected messages, a reset to no motion is performed in code
+    if (cluster == "0406" & value == "01" & state.ignoreMotion == false) {
 		log.debug "${device.displayName} detected motion"
-		def seconds = motionreset ? motionreset : 120
+		def secondsReset = motionreset ? motionreset : 61
 		resultMap = [
 			name: 'motion',
 			value: 'active',
 			descriptionText: "${device.displayName} detected motion"
 		]
-		sendEvent(name: "lastMotion", value: now, displayed: false)
-		runIn(seconds, stopMotion)
+		sendEvent(name: "lastMotion", value: (state.testModeActive ? ">>>>>  Testing Mode is ACTIVE  <<<<<" : "Last Motion: ${formatDate()}"), displayed: false)
+		if (state.testModeActive == true) {
+			runIn(7, stopMotion)
+		} else {
+			if (secondsReset > 10) {
+				state.ignoreMotion = true
+				runIn(secondsReset - 6, stopIgnoreMotion)
+				log.debug "${device.displayName}: Motion detected, additional motion detected messages will be ignored for ${secondsReset - 6} seconds"
+			}
+			runIn(secondsReset, stopMotion)
+		}
 	}
 	else if (cluster == "0000" && attrId == "0005") {
         def modelName = ""
@@ -250,10 +259,25 @@ private Map getBatteryResult(rawValue) {
 
 // If currently in 'active' motion detected state, stopMotion() resets to 'inactive' state and displays 'no motion'
 def stopMotion() {
-	if (device.currentState('motion')?.value == "active") {
-		def seconds = motionreset ? motionreset : 120
+	def secondsReset = motionreset ? motionreset : 61
+	if (device.currentState('motion')?.value != "inactive") {
 		sendEvent(name:"motion", value:"inactive", isStateChange: true)
-		log.debug "${device.displayName} reset to no motion after ${seconds} seconds"
+		log.debug "${device.displayName}: Reset to no motion (inactive)${state.testModeActive ? "" : " after ${motionreset?:61} seconds"}"
+	}
+}
+
+// Resume allowing the DTH to handle motion detected messages
+def stopIgnoreMotion() {
+	state.ignoreMotion = false
+	if (!state.testModeActive)
+		log.debug "${device.displayName}: Finished ignoring motion detected messages"
+}
+
+// Deactivate Testing Mode setting
+def finishTestMode() {
+	if (state.testModeActive) {
+		log.debug "${device.displayName}: Testing Mode has been deactivated"
+		state.testModeActive = false
 	}
 }
 
@@ -267,7 +291,8 @@ def resetBatteryRuntime(paired) {
 
 // installed() runs just after a sensor is paired using the "Add a Thing" method in the SmartThings mobile app
 def installed() {
-	state.battery = 0
+	state.ignoreMotion = false
+	state.testModeActive = false
 	if (!batteryRuntime) resetBatteryRuntime(true)
 	checkIntervalEvent("installed")
 }
@@ -275,7 +300,9 @@ def installed() {
 // configure() runs after installed() when a sensor is paired
 def configure() {
 	log.debug "${device.displayName}: configuring"
-		state.battery = 0
+	state.ignoreMotion = false
+	state.testModeActive = false
+	stopMotion()
 	if (!batteryRuntime) resetBatteryRuntime(true)
 	checkIntervalEvent("configured")
 	return
@@ -283,8 +310,21 @@ def configure() {
 
 // updated() will run twice every time user presses save in preference settings page
 def updated() {
-		checkIntervalEvent("updated")
-		if(battReset){
+	checkIntervalEvent("updated")
+    stopMotion()
+	if (testMode) {
+		if (!state.testModeActive) {
+			runIn(120, finishTestMode)
+			state.testModeActive = true
+			log.debug "${device.displayName}: Testing Mode activated for 60 minutes"
+		} else
+			finishTestMode()
+		device.updateSetting("testMode", false)
+	}
+	if (!state.testModeActive)
+			log.debug "${device.displayName}: Motion Reset time set to ${(motionreset ? motionreset : 61)} seconds"
+	stopIgnoreMotion()
+	if (battReset) {
 		resetBatteryRuntime()
 		device.updateSetting("battReset", false)
 	}
