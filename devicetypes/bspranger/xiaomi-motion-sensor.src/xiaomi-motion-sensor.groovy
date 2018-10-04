@@ -13,33 +13,33 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *  Original device handler code by a4refillpad, adapted for use with Aqara model by bspranger
- *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh 
- * 
+ *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh
+ *
  *  Known issues:
  *  Xiaomi sensors do not seem to respond to refresh requests
  *  Inconsistent rendering of user interface text/graphics between iOS and Android devices - This is due to SmartThings, not this device handler
- *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See 
+ *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See
  *
  */
 
 metadata {
-    definition (name: "Xiaomi Motion Sensor", namespace: "bspranger", author: "bspranger") {
+    definition (name: "Xiaomi Motion Sensor", namespace: "bspranger", author: "bspranger", mnmn: "Xiaomi", vid: "generic-motion") {
         capability "Motion Sensor"
         capability "Configuration"
         capability "Battery"
         capability "Sensor"
-        capability "Health Check" 
-        
+        capability "Health Check"
+
         attribute "lastCheckin", "String"
         attribute "lastCheckinDate", "String"
         attribute "lastMotion", "String"
-        attribute "batteryRuntime", "String"	
+        attribute "batteryRuntime", "String"
 
         fingerprint profileId: "0104", deviceId: "0104", inClusters: "0000, 0003, FFFF, 0019", outClusters: "0000, 0004, 0003, 0006, 0008, 0005, 0019", manufacturer: "LUMI", model: "lumi.sensor_motion", deviceJoinName: "Xiaomi Motion"
-        
-        command "resetBatteryRuntime"	
+
+        command "resetBatteryRuntime"
         command "stopMotion"
-        
+
     }
 
 	simulator {
@@ -87,7 +87,7 @@ metadata {
 		input description: "This setting only changes how long MOTION DETECTED is reported in SmartThings. The sensor hardware always remains blind to motion for 60 seconds after any activity.", type: "paragraph", element: "paragraph", title: "MOTION RESET"
 		input "motionreset", "number", title: "", description: "Enter number of seconds (default = 60)", range: "1..7200"
 		//Date & Time Config
-		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
+		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"
 		input name: "dateformat", type: "enum", title: "Set Date Format\n US (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", options:["US","UK","Other"]
 		input name: "clockformat", type: "bool", title: "Use 24 hour clock?"
 		//Battery Reset Config
@@ -103,26 +103,26 @@ metadata {
 // Parse incoming device messages to generate events
 def parse(String description) {
 	log.debug "${device.displayName} Parsing: $description"
-	
+
 	// Determine current time and date in the user-selected date format and clock style
-	def now = formatDate()    
+	def now = formatDate()
 	def nowDate = new Date(now).getTime()
 
 	// Any report - motion, lux & Battery - results in a lastCheckin event and update to Last Event tile
 	// However, only a non-parseable report results in lastCheckin being displayed in events log
 	sendEvent(name: "lastCheckin", value: now, displayed: false)
 	sendEvent(name: "lastCheckinDate", value: nowDate, displayed: false)
-	
+
 	Map map = [:]
 
-	// Send message data to appropriate parsing function based on the type of report	
+	// Send message data to appropriate parsing function based on the type of report
 	if (description?.startsWith('read attr -')) {
 		map = parseReportAttributeMessage(description)
 	}
 	else if (description?.startsWith('catchall:')) {
 		map = parseCatchAllMessage(description)
 	}
- 
+
 	log.debug "${device.displayName} Parse returned: $map"
 	def result = map ? createEvent(map) : null
 
@@ -134,7 +134,7 @@ private Map parseReportAttributeMessage(String description) {
 	def cluster = description.split(",").find {it.split(":")[0].trim() == "cluster"}?.split(":")[1].trim()
 	def attrId = description.split(",").find {it.split(":")[0].trim() == "attrId"}?.split(":")[1].trim()
 	def value = description.split(",").find {it.split(":")[0].trim() == "value"}?.split(":")[1].trim()
- 
+
 	Map resultMap = [:]
 	def now = formatDate()
 
@@ -149,7 +149,7 @@ private Map parseReportAttributeMessage(String description) {
 		]
 		sendEvent(name: "lastMotion", value: now, displayed: false)
 		runIn(seconds, stopMotion)
-	} 
+	}
 	else if (cluster == "0000" && attrId == "0005") {
 		def modelName = ""
 		// Parsing the model
@@ -188,7 +188,7 @@ private Map parseCatchAllMessage(String description) {
 // Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
 private Map getBatteryResult(rawValue) {
     // raw voltage is normally supplied as a 4 digit integer that needs to be divided by 1000
-    // but in the case the final zero is dropped then divide by 100 to get actual voltage value 
+    // but in the case the final zero is dropped then divide by 100 to get actual voltage value
     def rawVolts = rawValue / 1000
     def minVolts
     def maxVolts
@@ -197,12 +197,12 @@ private Map getBatteryResult(rawValue) {
     	minVolts = 2.5
     else
    	minVolts = voltsmin
-    
+
     if (voltsmax == null || voltsmax == "")
     	maxVolts = 3.0
     else
 	maxVolts = voltsmax
-	
+
     def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
     def roundedPct = Math.min(100, Math.round(pct * 100))
 
@@ -274,7 +274,7 @@ def formatDate(batteryReset) {
         correctedTimezone = TimeZone.getTimeZone("GMT")
         log.error "${device.displayName}: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app."
         sendEvent(name: "error", value: "", descriptionText: "ERROR: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app.")
-    } 
+    }
     else {
         correctedTimezone = location.timeZone
     }

@@ -13,17 +13,17 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *  Original device handler code by a4refillpad, adapted for use with Aqara model by bspranger
- *  Additional contributions to code by alecm, alixjg, bspranger, cscheiene, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh 
- * 
+ *  Additional contributions to code by alecm, alixjg, bspranger, cscheiene, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh
+ *
  *  Known issues:
  *  Xiaomi sensors do not seem to respond to refresh requests
  *  Inconsistent rendering of user interface text/graphics between iOS and Android devices - This is due to SmartThings, not this device handler
- *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See 
+ *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See
  *
  */
 
 metadata {
-	definition (name: "Xiaomi Aqara Temperature Humidity Sensor", namespace: "bspranger", author: "bspranger") {
+	definition (name: "Xiaomi Aqara Temperature Humidity Sensor", namespace: "bspranger", author: "bspranger", ocfDeviceType: "x.com.st.d.sensor.multifunction") {
 	capability "Temperature Measurement"
 	capability "Relative Humidity Measurement"
 	capability "Sensor"
@@ -138,7 +138,7 @@ metadata {
 		input name:"PressureUnits", type:"enum", title:"Pressure Units", options:["mbar", "kPa", "inHg", "mmHg"], description:"Sets the unit in which pressure will be reported"
 		input description: "NOTE: The temperature unit (C / F) can be changed in the location settings for your hub.", type: "paragraph", element: "paragraph", title: ""
 		//Date & Time Config
-		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
+		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"
 		input name: "dateformat", type: "enum", title: "Set Date Format\nUS (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", options:["US","UK","Other"]
 		input name: "clockformat", type: "bool", title: "Use 24 hour clock?"
 		//Battery Reset Config
@@ -156,7 +156,7 @@ def parse(String description) {
     log.debug "${device.displayName}: Parsing description: ${description}"
 
     // Determine current time and date in the user-selected date format and clock style
-    def now = formatDate()    
+    def now = formatDate()
     def nowDate = new Date(now).getTime()
 
 	// Any report - temp, humidity, pressure, & battery - results in a lastCheckin event and update to Last Checkin tile
@@ -186,7 +186,7 @@ def parse(String description) {
 		map = parseReadAttr(description)
 	} else {
 		log.debug "${device.displayName}: was unable to parse ${description}"
-        sendEvent(name: "lastCheckin", value: now) 
+        sendEvent(name: "lastCheckin", value: now)
 	}
 
 	if (map) {
@@ -245,7 +245,7 @@ private Map parseReadAttr(String description) {
 			settings.PressureUnits = "mbar"
 		}
 		// log.debug "${device.displayName}: Converting ${pressureval} to ${PressureUnits}"
-	
+
 		switch (PressureUnits) {
 			case "mbar":
 				pressureval = (pressureval/10) as Float
@@ -284,7 +284,7 @@ private Map parseReadAttr(String description) {
 		]
 	} else if (cluster == "0000" && attrId == "0005")  {
 		def modelName = ""
-	
+
 		// Parsing the model name
 		for (int i = 0; i < value.length(); i+=2) {
 			def str = value.substring(i, i+2);
@@ -299,7 +299,7 @@ private Map parseReadAttr(String description) {
 // Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
 private Map getBatteryResult(rawValue) {
     // raw voltage is normally supplied as a 4 digit integer that needs to be divided by 1000
-    // but in the case the final zero is dropped then divide by 100 to get actual voltage value 
+    // but in the case the final zero is dropped then divide by 100 to get actual voltage value
     def rawVolts = rawValue / 1000
     def minVolts
     def maxVolts
@@ -308,12 +308,12 @@ private Map getBatteryResult(rawValue) {
     	minVolts = 2.5
     else
    	minVolts = voltsmin
-    
+
     if(voltsmax == null || voltsmax == "")
     	maxVolts = 3.0
     else
 	maxVolts = voltsmax
-    
+
     def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
     def roundedPct = Math.min(100, Math.round(pct * 100))
 
@@ -355,7 +355,7 @@ def resetMinMax() {
 def updateMinMaxTemps(temp) {
 	temp = temp ? (int) temp : temp
 	if ((temp > device.currentValue('maxTemp')) || (device.currentValue('maxTemp') == null))
-		sendEvent(name: "maxTemp", value: temp, displayed: false)	
+		sendEvent(name: "maxTemp", value: temp, displayed: false)
 	if ((temp < device.currentValue('minTemp')) || (device.currentValue('minTemp') == null))
 		sendEvent(name: "minTemp", value: temp, displayed: false)
 	refreshMultiAttributes()
@@ -425,7 +425,7 @@ def formatDate(batteryReset) {
         correctedTimezone = TimeZone.getTimeZone("GMT")
         log.error "${device.displayName}: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app."
         sendEvent(name: "error", value: "", descriptionText: "ERROR: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app.")
-    } 
+    }
     else {
         correctedTimezone = location.timeZone
     }

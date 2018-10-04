@@ -13,16 +13,16 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *  Original device handler code by a4refillpad, adapted for use with Aqara model by bspranger
- *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh 
- * 
+ *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh
+ *
  *  Known issues:
  *  Xiaomi sensors do not seem to respond to refresh requests
  *  Inconsistent rendering of user interface text/graphics between iOS and Android devices - This is due to SmartThings, not this device handler
- *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See 
+ *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See
  *
  */
 metadata {
-    definition (name: "Xiaomi Aqara Door/Window Sensor", namespace: "bspranger", author: "bspranger") {
+    definition (name: "Xiaomi Aqara Door/Window Sensor", namespace: "bspranger", author: "bspranger", mnmn: "Xiaomi", vid: "generic-contact-2") {
         capability "Configuration"
         capability "Sensor"
         capability "Contact Sensor"
@@ -86,7 +86,7 @@ metadata {
    }
    preferences {
 		//Date & Time Config
-		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
+		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"
 		input name: "dateformat", type: "enum", title: "Set Date Format\n US (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", options:["US","UK","Other"]
 		input name: "clockformat", type: "bool", title: "Use 24 hour clock?"
 		//Battery Reset Config
@@ -96,7 +96,7 @@ metadata {
 	        input description: "Only change the settings below if you know what you're doing.", type: "paragraph", element: "paragraph", title: "ADVANCED SETTINGS"
 		input name: "voltsmax", title: "Max Volts\nA battery is at 100% at __ volts\nRange 2.8 to 3.4", type: "decimal", range: "2.8..3.4", defaultValue: 3, required: false
 		input name: "voltsmin", title: "Min Volts\nA battery is at 0% (needs replacing) at __ volts\nRange 2.0 to 2.7", type: "decimal", range: "2..2.7", defaultValue: 2.5, required: false
-  } 
+  }
 }
 
 // Parse incoming device messages to generate events
@@ -104,7 +104,7 @@ def parse(String description) {
     def result = zigbee.getEvent(description)
 
 	// Determine current time and date in the user-selected date format and clock style
-    def now = formatDate()    
+    def now = formatDate()
     def nowDate = new Date(now).getTime()
 	// Any report - contact sensor & Battery - results in a lastCheckin event and update to Last Checkin tile
 	// However, only a non-parseable report results in lastCheckin being displayed in events log
@@ -113,7 +113,7 @@ def parse(String description) {
 
     Map map = [:]
 
-	// Send message data to appropriate parsing function based on the type of report	
+	// Send message data to appropriate parsing function based on the type of report
     if (result) {
         log.debug "${device.displayName} Event: ${result}"
         map = getContactResult(result)
@@ -135,7 +135,7 @@ def parse(String description) {
 // Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
 private Map getBatteryResult(rawValue) {
     // raw voltage is normally supplied as a 4 digit integer that needs to be divided by 1000
-    // but in the case the final zero is dropped then divide by 100 to get actual voltage value 
+    // but in the case the final zero is dropped then divide by 100 to get actual voltage value
     def rawVolts = rawValue / 1000
 
     def minVolts
@@ -145,12 +145,12 @@ private Map getBatteryResult(rawValue) {
     	minVolts = 2.5
     else
    	minVolts = voltsmin
-    
+
     if(voltsmax == null || voltsmax == "")
     	maxVolts = 3.0
     else
 	maxVolts = voltsmax
-        
+
     def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
     def roundedPct = Math.min(100, Math.round(pct * 100))
 
@@ -230,13 +230,13 @@ private Map getContactResult(result) {
 
 def resetClosed() {
     sendEvent(name: "contact", value: "closed", descriptionText: "${device.displayName} was manually reset to closed")
-} 
+}
 
 def resetOpen() {
 	def now = formatDate()
 	def nowDate = new Date(now).getTime()
 	sendEvent(name: "lastOpened", value: now, displayed: false)
-	sendEvent(name: "lastOpenedDate", value: nowDate, displayed: false) 
+	sendEvent(name: "lastOpenedDate", value: nowDate, displayed: false)
 	sendEvent(name: "contact", value: "open", descriptionText: "${device.displayName} was manually reset to open")
 }
 
@@ -288,7 +288,7 @@ def formatDate(batteryReset) {
         correctedTimezone = TimeZone.getTimeZone("GMT")
         log.error "${device.displayName}: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app."
         sendEvent(name: "error", value: "", descriptionText: "ERROR: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app.")
-    } 
+    }
     else {
         correctedTimezone = location.timeZone
     }
