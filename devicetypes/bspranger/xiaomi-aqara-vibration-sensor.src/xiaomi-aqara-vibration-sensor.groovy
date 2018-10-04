@@ -22,9 +22,9 @@
  *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See
  *
  */
-
+// ocfDeviceType: "x.com.st.d.sensor.motion", vid: "generic-motion"
 metadata {
-	definition (name: "Xiaomi Aqara Vibration Sensor", namespace: "bspranger", author: "bspranger", mnmn: "Xiaomi", vid: "generic-contact-2") {
+	definition (name: "Xiaomi Aqara Vibration Sensor", namespace: "bspranger", author: "bspranger", mnmn: "Xiaomi", ocfDeviceType: "x.com.st.d.sensor.multifunction") {
 		capability "Acceleration Sensor"
 		capability "Battery"
 		capability "Button"
