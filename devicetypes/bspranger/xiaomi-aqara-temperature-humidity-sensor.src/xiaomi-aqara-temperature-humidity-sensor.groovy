@@ -256,7 +256,7 @@ private Map parseReadAttr(String description) {
     
         log.debug "${device.displayName}: Parsing read attr: cluster: ${cluster}, attrId: ${attrId}, value: ${value}"
 	
-        if ((cluster == "0403") && ((attrId == "0000") | (attrId == "0020"))) {
+        if ((cluster == "0403") && ((attrId == "0000") || (attrId == "0020"))) {
 		
             float pressureval = 0.0
     	
