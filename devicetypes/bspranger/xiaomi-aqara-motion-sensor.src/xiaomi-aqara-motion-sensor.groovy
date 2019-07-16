@@ -13,17 +13,17 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *  Original device handler code by a4refillpad, adapted for use with Aqara model by bspranger
- *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh 
- * 
+ *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh
+ *
  *  Known issues:
  *  Xiaomi sensors do not seem to respond to refresh requests
  *  Inconsistent rendering of user interface text/graphics between iOS and Android devices - This is due to SmartThings, not this device handler
- *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See 
+ *  Pairing Xiaomi sensors can be difficult as they were not designed to use with a SmartThings hub. See
  *
  */
 
 metadata {
-    definition (name: "Xiaomi Aqara Motion Sensor", namespace: "bspranger", author: "bspranger") {
+    definition (name: "Xiaomi Aqara Motion Sensor", namespace: "bspranger", author: "bspranger", mnmn: "Xiaomi", vid: "generic-motion") {
         capability "Motion Sensor"
         capability "Illuminance Measurement"
         capability "Configuration"
@@ -81,7 +81,7 @@ metadata {
 		[value:500, color:"#51b8e1"],
             	[value:750, color:"#66c1e5"],
             	[value:1000, color:"#7ccae9"],
-            	[value:1500, color: "#92d3ed"] 
+            	[value:1500, color: "#92d3ed"]
            ]
         }
         standardTile("reset", "device.reset", inactiveLabel: false, decoration:"flat", width: 2, height: 2) {
@@ -102,7 +102,7 @@ metadata {
 		input description: "This setting only changes how long MOTION DETECTED is reported in SmartThings. The sensor hardware always remains blind to motion for 60 seconds after any activity.", type: "paragraph", element: "paragraph", title: "MOTION RESET"
 		input "motionreset", "number", title: "", description: "Enter number of seconds (default = 60)", range: "1..7200"
 		//Date & Time Config
-		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
+		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"
 		input name: "dateformat", type: "enum", title: "Set Date Format\n US (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", options:["US","UK","Other"]
 		input name: "clockformat", type: "bool", title: "Use 24 hour clock?"
 		//Battery Reset Config
@@ -112,7 +112,7 @@ metadata {
 		input description: "Only change the settings below if you know what you're doing.", type: "paragraph", element: "paragraph", title: "ADVANCED SETTINGS"
 		input name: "voltsmax", title: "Max Volts\nA battery is at 100% at __ volts\nRange 2.8 to 3.4", type: "decimal", range: "2.8..3.4", defaultValue: 3
 		input name: "voltsmin", title: "Min Volts\nA battery is at 0% (needs replacing) at __ volts\nRange 2.0 to 2.7", type: "decimal", range: "2..2.7", defaultValue: 2.5
-	}	
+	}
 }
 
 // Parse incoming device messages to generate events
@@ -120,7 +120,7 @@ def parse(String description) {
     log.debug "${device.displayName} parsing: $description"
 
 	// Determine current time and date in the user-selected date format and clock style
-    def now = formatDate()    
+    def now = formatDate()
     def nowDate = new Date(now).getTime()
 
 	// Any report - motion, lux & Battery - results in a lastCheckin event and update to Last Event tile
@@ -129,8 +129,8 @@ def parse(String description) {
     sendEvent(name: "lastCheckinDate", value: nowDate, displayed: false)
 
     Map map = [:]
-	
-	// Send message data to appropriate parsing function based on the type of report	
+
+	// Send message data to appropriate parsing function based on the type of report
     if (description?.startsWith('illuminance:')) {
         map = parseIlluminance(description)
     }
@@ -219,7 +219,7 @@ private Map parseCatchAllMessage(String description) {
 // Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
 private Map getBatteryResult(rawValue) {
     // raw voltage is normally supplied as a 4 digit integer that needs to be divided by 1000
-    // but in the case the final zero is dropped then divide by 100 to get actual voltage value 
+    // but in the case the final zero is dropped then divide by 100 to get actual voltage value
     def rawVolts = rawValue / 1000
 	def minVolts
     def maxVolts
@@ -228,12 +228,12 @@ private Map getBatteryResult(rawValue) {
     	minVolts = 2.5
     else
    	minVolts = voltsmin
-    
+
     if (voltsmax == null || voltsmax == "")
     	maxVolts = 3.0
     else
 	maxVolts = voltsmax
-    
+
     def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
     def roundedPct = Math.min(100, Math.round(pct * 100))
 
@@ -305,7 +305,7 @@ def formatDate(batteryReset) {
         correctedTimezone = TimeZone.getTimeZone("GMT")
         log.error "${device.displayName}: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app."
         sendEvent(name: "error", value: "", descriptionText: "ERROR: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app.")
-    } 
+    }
     else {
         correctedTimezone = location.timeZone
     }

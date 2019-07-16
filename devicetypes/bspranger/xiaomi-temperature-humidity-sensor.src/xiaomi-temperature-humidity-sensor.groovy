@@ -23,7 +23,7 @@
  */
 
 metadata {
-    definition (name: "Xiaomi Temperature Humidity Sensor", namespace: "bspranger", author: "bspranger") {
+    definition (name: "Xiaomi Temperature Humidity Sensor", namespace: "bspranger", author: "bspranger", ocfDeviceType: "x.com.st.d.sensor.multifunction") {
 	capability "Temperature Measurement"
 	capability "Relative Humidity Measurement"
 	capability "Sensor"

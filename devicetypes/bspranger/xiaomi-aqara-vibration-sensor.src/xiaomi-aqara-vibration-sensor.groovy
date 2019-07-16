@@ -24,7 +24,7 @@
  */
 
 metadata {
-	definition (name: "Xiaomi Aqara Vibration Sensor", namespace: "bspranger", author: "bspranger") {
+	definition (name: "Xiaomi Aqara Vibration Sensor", namespace: "bspranger", author: "bspranger", mnmn: "Xiaomi", ocfDeviceType: "x.com.st.d.sensor.multifunction") {
 		capability "Acceleration Sensor"
 		capability "Battery"
 		capability "Button"

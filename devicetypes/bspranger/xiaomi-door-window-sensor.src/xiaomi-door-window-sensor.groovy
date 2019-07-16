@@ -13,8 +13,8 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  *  Original device handler code by a4refillpad, adapted for use with Aqara model by bspranger
- *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh 
- * 
+ *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, & veeceeoh
+ *
  *  Known issues:
  *  Xiaomi sensors do not seem to respond to refresh requests
  *  Inconsistent rendering of user interface text/graphics between iOS and Android devices - This is due to SmartThings, not this device handler
@@ -22,31 +22,31 @@
  *
  */
 metadata {
-   definition (name: "Xiaomi Door/Window Sensor", namespace: "bspranger", author: "bspranger") {
+   definition (name: "Xiaomi Door/Window Sensor", namespace: "bspranger", author: "bspranger", mnmn: "Xiaomi", vid: "generic-contact-2") {
    capability "Configuration"
    capability "Sensor"
    capability "Contact Sensor"
    capability "Battery"
    capability "Health Check"
-   
+
    attribute "lastCheckin", "String"
    attribute "lastCheckinDate", "Date"
    attribute "lastOpened", "String"
-   attribute "lastOpenedDate", "Date" 
+   attribute "lastOpenedDate", "Date"
    attribute "batteryRuntime", "String"
 
    fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000, 0003, FFFF, 0019", outClusters: "0000, 0004, 0003, 0006, 0008, 0005 0019", manufacturer: "LUMI", model: "lumi.sensor_magnet", deviceJoinName: "Xiaomi Door Sensor"
-   
+
    command "resetBatteryRuntime"
    command "resetClosed"
    command "resetOpen"
    }
-    
+
    simulator {
       status "closed": "on/off: 0"
       status "open": "on/off: 1"
    }
-    
+
    tiles(scale: 2) {
         multiAttributeTile(name:"contact", type: "generic", width: 6, height: 4){
             tileAttribute ("device.contact", key: "PRIMARY_CONTROL") {
@@ -62,7 +62,7 @@ metadata {
             backgroundColors: [
                 [value: 10, color: "#bc2323"],
                 [value: 26, color: "#f1d801"],
-                [value: 51, color: "#44b621"] 
+                [value: 51, color: "#44b621"]
             ]
         }
 	valueTile("spacer", "spacer", decoration: "flat", inactiveLabel: false, width: 1, height: 1) {
@@ -85,7 +85,7 @@ metadata {
    }
    preferences {
 		//Date & Time Config
-		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"    
+		input description: "", type: "paragraph", element: "paragraph", title: "DATE & CLOCK"
 		input name: "dateformat", type: "enum", title: "Set Date Format\n US (MDY) - UK (DMY) - Other (YMD)", description: "Date Format", options:["US","UK","Other"]
 		input name: "clockformat", type: "bool", title: "Use 24 hour clock?"
 		//Battery Reset Config
@@ -95,7 +95,7 @@ metadata {
 	        input description: "Only change the settings below if you know what you're doing.", type: "paragraph", element: "paragraph", title: "ADVANCED SETTINGS"
 		input name: "voltsmax", title: "Max Volts\nA battery is at 100% at __ volts\nRange 2.8 to 3.4", type: "decimal", range: "2.8..3.4", defaultValue: 3, required: false
 		input name: "voltsmin", title: "Min Volts\nA battery is at 0% (needs replacing) at __ volts\nRange 2.0 to 2.7", type: "decimal", range: "2..2.7", defaultValue: 2.5, required: false
-    } 
+    }
 }
 
 // Parse incoming device messages to generate events
@@ -108,13 +108,13 @@ def parse(String description) {
 	// Any report - button press & Battery - results in a lastCheckin event and update to Last Checkin tile
 	// However, only a non-parseable report results in lastCheckin being displayed in events log
     sendEvent(name: "lastCheckin", value: now, displayed: false)
-    sendEvent(name: "lastCheckinDate", value: nowDate, displayed: false) 
+    sendEvent(name: "lastCheckinDate", value: nowDate, displayed: false)
 
     Map map = [:]
 
 	// Send message data to appropriate parsing function based on the type of report
     if (description?.startsWith('on/off: ')) {
-        map = parseCustomMessage(description) 
+        map = parseCustomMessage(description)
         if (map.value == "open") {
             sendEvent(name: "lastOpened", value: now, displayed: false)
             sendEvent(name: "lastOpenedDate", value: nowDate, displayed: false)
@@ -124,7 +124,7 @@ def parse(String description) {
         map = parseCatchAllMessage(description)
     }
     else if (description?.startsWith("read attr - raw: ")) {
-        map = parseReadAttrMessage(description)  
+        map = parseReadAttrMessage(description)
     }
     log.debug "${device.displayName}: Parse returned $map"
     def results = map ? createEvent(map) : null
@@ -132,7 +132,7 @@ def parse(String description) {
     return results;
 }
 
-private Map parseReadAttrMessage(String description) {   
+private Map parseReadAttrMessage(String description) {
     def cluster = description.split(",").find {it.split(":")[0].trim() == "cluster"}?.split(":")[1].trim()
     def attrId = description.split(",").find {it.split(":")[0].trim() == "attrId"}?.split(":")[1].trim()
     def value = description.split(",").find {it.split(":")[0].trim() == "value"}?.split(":")[1].trim()
@@ -140,7 +140,7 @@ private Map parseReadAttrMessage(String description) {
         name: 'Model',
         value: ''
     ]
-    
+
     if (cluster == "0000" && attrId == "0005") {
         // Parsing the model
         for (int i = 0; i < value.length(); i+=2) {
@@ -155,7 +155,7 @@ private Map parseReadAttrMessage(String description) {
 // Convert raw 4 digit integer voltage value into percentage based on minVolts/maxVolts range
 private Map getBatteryResult(rawValue) {
     // raw voltage is normally supplied as a 4 digit integer that needs to be divided by 1000
-    // but in the case the final zero is dropped then divide by 100 to get actual voltage value 
+    // but in the case the final zero is dropped then divide by 100 to get actual voltage value
     def rawVolts = rawValue / 1000
     def minVolts
     def maxVolts
@@ -164,12 +164,12 @@ private Map getBatteryResult(rawValue) {
     	minVolts = 2.5
     else
    	minVolts = voltsmin
-    
+
     if(voltsmax == null || voltsmax == "")
     	maxVolts = 3.0
     else
-	maxVolts = voltsmax  
-   
+	maxVolts = voltsmax
+
     def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
     def roundedPct = Math.min(100, Math.round(pct * 100))
 
@@ -180,7 +180,7 @@ private Map getBatteryResult(rawValue) {
         isStateChange: true,
         descriptionText : "${device.displayName} Battery at ${roundedPct}% (${rawVolts} Volts)"
     ]
-    
+
     log.debug "${device.displayName}: ${result}"
     return result
 }
@@ -230,13 +230,13 @@ private Map getContactResult(value) {
 
 def resetClosed() {
     sendEvent(name: "contact", value: "closed", descriptionText: "${device.displayName} was manually reset to closed")
-} 
+}
 
 def resetOpen() {
 	def now = formatDate()
 	def nowDate = new Date(now).getTime()
 	sendEvent(name: "lastOpened", value: now, displayed: false)
-	sendEvent(name: "lastOpenedDate", value: nowDate, displayed: false) 
+	sendEvent(name: "lastOpenedDate", value: nowDate, displayed: false)
 	sendEvent(name: "contact", value: "open", descriptionText: "${device.displayName} was manually reset to open")
 }
 
@@ -288,7 +288,7 @@ def formatDate(batteryReset) {
         correctedTimezone = TimeZone.getTimeZone("GMT")
         log.error "${device.displayName}: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app."
         sendEvent(name: "error", value: "", descriptionText: "ERROR: Time Zone not set, so GMT was used. Please set up your location in the SmartThings mobile app.")
-    } 
+    }
     else {
         correctedTimezone = location.timeZone
     }
