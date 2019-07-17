@@ -234,54 +234,63 @@ private Map parseReadAttr(String description) {
 	def cluster = description.split(",").find {it.split(":")[0].trim() == "cluster"}?.split(":")[1].trim()
 	def attrId = description.split(",").find {it.split(":")[0].trim() == "attrId"}?.split(":")[1].trim()
 	def value = description.split(",").find {it.split(":")[0].trim() == "value"}?.split(":")[1].trim()
-
-	// log.debug "${device.displayName}: Parsing read attr: cluster: ${cluster}, attrId: ${attrId}, value: ${value}"
-
-	if ((cluster == "0403") && (attrId == "0000")) {
-		def result = value[0..3]
-		float pressureval = Integer.parseInt(result, 16)
-
-		if (!(settings.PressureUnits)){
-			settings.PressureUnits = "mbar"
-		}
-		// log.debug "${device.displayName}: Converting ${pressureval} to ${PressureUnits}"
+	def divisor = 10
+    
+        log.debug "${device.displayName}: Parsing read attr: cluster: ${cluster}, attrId: ${attrId}, value: ${value}"
 	
-		switch (PressureUnits) {
-			case "mbar":
-				pressureval = (pressureval/10) as Float
-				pressureval = pressureval.round(1);
-				break;
+        if ((cluster == "0403") && ((attrId == "0000") || (attrId == "0020"))) {
+		
+            float pressureval = 0.0
+    	
+            if (attrId == "0000") {
+                def result = value[0..3]
+                pressureval = Integer.parseInt(result, 16)
+                divisor = 10
+	    } else if (attrId == "0020") {
+                pressureval = Integer.parseInt(value, 16)
+                divisor = 1000
+            }
+        
+	    if (!(settings.PressureUnits)) {
+		settings.PressureUnits = "mbar"
+	    }
+	    // log.debug "${device.displayName}: Converting ${pressureval} to ${PressureUnits}"
+	
+	    pressureval = (pressureval/divisor) as Float
+	    switch (PressureUnits) {
+		case "mbar":
+		    pressureval = pressureval.round(1);
+		    break;
 
-			case "kPa":
-				pressureval = (pressureval/100) as Float
-				pressureval = pressureval.round(2);
-				break;
+	        case "kPa":
+		    pressureval = (pressureval/10) as Float
+		    pressureval = pressureval.round(2);
+		    break;
 
-			case "inHg":
-				pressureval = (((pressureval/10) as Float) * 0.0295300)
-				pressureval = pressureval.round(2);
-				break;
+		case "inHg":
+		    pressureval = pressureval * 0.0295300
+		    pressureval = pressureval.round(2);
+		    break;
 
-			case "mmHg":
-				pressureval = (((pressureval/10) as Float) * 0.750062)
-				pressureval = pressureval.round(2);
-				break;
-		}
-		// log.debug "${device.displayName}: Pressure is ${pressureval} ${PressureUnits} before applying the pressure offset."
+		case "mmHg":
+		    pressureval = pressureval * 0.750062
+		    pressureval = pressureval.round(2);
+		    break;
+	    }
 
-		if (settings.pressOffset) {
-			pressureval = (pressureval + settings.pressOffset)
-		}
+	    if (settings.pressOffset) {
+		pressureval = (pressureval + settings.pressOffset)
+	    }
 
-		pressureval = pressureval.round(2);
+	    pressureval = pressureval.round(2);
 
-		resultMap = [
-			name: 'pressure',
-			value: pressureval,
-			unit: "${PressureUnits}",
-			isStateChange: true,
-			descriptionText : "${device.displayName} Pressure is ${pressureval} ${PressureUnits}"
-		]
+	    resultMap = [
+		name: 'pressure',
+		value: pressureval,
+		unit: "${PressureUnits}",
+		isStateChange: true,
+		descriptionText : "${device.displayName} Pressure is ${pressureval} ${PressureUnits}"
+	    ]
 	} else if (cluster == "0000" && attrId == "0005")  {
 		def modelName = ""
 	
