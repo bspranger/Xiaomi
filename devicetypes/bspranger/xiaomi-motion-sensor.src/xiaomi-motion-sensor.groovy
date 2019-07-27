@@ -23,7 +23,7 @@
  */
 
 metadata {
-    definition (name: "Xiaomi Motion Sensor", namespace: "bspranger", author: "bspranger") {
+    definition (name: "Xiaomi Motion Sensor", namespace: "bspranger", author: "bspranger", mnmn: "SmartThings", vid: "generic-motion", ocfDeviceType: "x.com.st.d.sensor.motion") {
         capability "Motion Sensor"
         capability "Configuration"
         capability "Battery"

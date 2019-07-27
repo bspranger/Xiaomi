@@ -57,7 +57,7 @@
  */
 
 metadata {
-	definition (name: "Xiaomi Mijia Honeywell Fire Detector", namespace: "bspranger", author: "bspranger") {
+	definition (name: "Xiaomi Mijia Honeywell Fire Detector", namespace: "bspranger", author: "bspranger", mnmn: "SmartThings", vid: "generic-smoke-co", ocfDeviceType: "x.com.st.d.sensor.smoke") {
 		capability "Battery" //attributes: battery
 		capability "Configuration" //commands: configure()
 		capability "Smoke Detector" //attributes: smoke ("detected","clear","tested")
